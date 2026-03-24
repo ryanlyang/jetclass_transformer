@@ -11,7 +11,7 @@ set -euo pipefail
 
 # Defaults tuned for your current setup; override with env vars if needed.
 DATA_DIR="${DATA_DIR:-/home/ryreu/atlas/PracticeTagging/data/jetclass_part0}"
-JETCLASS_REPO="${JETCLASS_REPO:-${SLURM_SUBMIT_DIR}}"
+JETCLASS_REPO="${JETCLASS_REPO:-${SLURM_SUBMIT_DIR:-$(pwd)}}"
 RUN_NAME="${RUN_NAME:-jetclass_part0_pt_30k5k}"
 FEATURE_TYPE="${FEATURE_TYPE:-full}"
 
@@ -38,6 +38,15 @@ set +u
 source ~/.bashrc
 set -u
 conda activate atlas_kd
+
+if ! command -v weaver >/dev/null 2>&1; then
+  echo "[preflight] weaver executable not found in PATH; checking python module..."
+  if ! python -m weaver --help >/dev/null 2>&1; then
+    echo "[preflight] ERROR: neither 'weaver' executable nor python module 'weaver' is available in this env."
+    echo "[preflight] Install with: python -m pip install --user weaver-core"
+    exit 1
+  fi
+fi
 
 cd "${SLURM_SUBMIT_DIR}"
 mkdir -p offline_reconstructor_logs

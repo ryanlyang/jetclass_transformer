@@ -12,7 +12,9 @@ import argparse
 import random
 import re
 import shlex
+import shutil
 import subprocess
+import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -132,6 +134,25 @@ def split_by_class(
     return train_labeled, val_unlabeled, test_labeled
 
 
+def resolve_weaver_command() -> list[str]:
+    weaver_bin = shutil.which("weaver")
+    if weaver_bin:
+        return [weaver_bin]
+
+    try:
+        import importlib.util
+
+        if importlib.util.find_spec("weaver") is not None:
+            return [sys.executable, "-m", "weaver"]
+    except Exception:
+        pass
+
+    raise FileNotFoundError(
+        "Could not find 'weaver' executable or Python module 'weaver'. "
+        "Install it in this environment (e.g. python -m pip install --user weaver-core)."
+    )
+
+
 def main() -> None:
     args = parse_args()
 
@@ -174,7 +195,8 @@ def main() -> None:
     model_prefix.parent.mkdir(parents=True, exist_ok=True)
     args.log_file.parent.mkdir(parents=True, exist_ok=True)
 
-    cmd: list[str] = ["weaver", "--data-train"]
+    weaver_launcher = resolve_weaver_command()
+    cmd: list[str] = [*weaver_launcher, "--data-train"]
     cmd.extend([f"{cls}:{path}" for cls, path in train_labeled])
 
     cmd.append("--data-val")
@@ -227,6 +249,7 @@ def main() -> None:
             extra = extra[1:]
         cmd.extend(extra)
 
+    print(f"\nUsing weaver launcher: {' '.join(shlex.quote(x) for x in weaver_launcher)}")
     print("\nWeaver command:")
     print(" ".join(shlex.quote(x) for x in cmd))
 
