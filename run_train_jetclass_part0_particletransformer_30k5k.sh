@@ -11,7 +11,7 @@ set -euo pipefail
 
 # Defaults tuned for your current setup; override with env vars if needed.
 DATA_DIR="${DATA_DIR:-/home/ryreu/atlas/PracticeTagging/data/jetclass_part0}"
-JETCLASS_REPO="${JETCLASS_REPO:-/home/ryreu/atlas/PracticeTagging/jetclass_transformer}"
+JETCLASS_REPO="${JETCLASS_REPO:-${SLURM_SUBMIT_DIR}}"
 RUN_NAME="${RUN_NAME:-jetclass_part0_pt_30k5k}"
 FEATURE_TYPE="${FEATURE_TYPE:-full}"
 
