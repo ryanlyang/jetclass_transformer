@@ -2,8 +2,8 @@
 #SBATCH --job-name=jcPart0PT
 #SBATCH --partition=tier3
 #SBATCH --gres=gpu:1
-#SBATCH --mem=48G
-#SBATCH --time=1-00:00:00
+#SBATCH --mem=32G
+#SBATCH --time=2:00:00
 #SBATCH --output=offline_reconstructor_logs/jetclass_part0_pt_%j.out
 #SBATCH --error=offline_reconstructor_logs/jetclass_part0_pt_%j.err
 
