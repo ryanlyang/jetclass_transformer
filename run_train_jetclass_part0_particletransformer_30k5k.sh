@@ -40,10 +40,13 @@ set -u
 conda activate atlas_kd
 
 if ! command -v weaver >/dev/null 2>&1; then
-  echo "[preflight] weaver executable not found in PATH; checking python module..."
-  if ! python -m weaver --help >/dev/null 2>&1; then
-    echo "[preflight] ERROR: neither 'weaver' executable nor python module 'weaver' is available in this env."
+  if [ -x "$HOME/.local/bin/weaver" ]; then
+    export PATH="$HOME/.local/bin:$PATH"
+    echo "[preflight] Added $HOME/.local/bin to PATH for weaver"
+  else
+    echo "[preflight] ERROR: 'weaver' executable not found."
     echo "[preflight] Install with: python -m pip install --user weaver-core"
+    echo "[preflight] If already installed with --user, add to PATH: export PATH="$HOME/.local/bin:$PATH""
     exit 1
   fi
 fi

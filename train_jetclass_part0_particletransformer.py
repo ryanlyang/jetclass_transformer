@@ -9,12 +9,12 @@ Default split is per class by file count: 8 train / 1 val / 1 test.
 from __future__ import annotations
 
 import argparse
+import os
 import random
 import re
 import shlex
 import shutil
 import subprocess
-import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -135,21 +135,21 @@ def split_by_class(
 
 
 def resolve_weaver_command() -> list[str]:
+    weaver_env = os.environ.get("WEAVER_BIN")
+    if weaver_env and Path(weaver_env).is_file() and os.access(weaver_env, os.X_OK):
+        return [weaver_env]
+
     weaver_bin = shutil.which("weaver")
     if weaver_bin:
         return [weaver_bin]
 
-    try:
-        import importlib.util
-
-        if importlib.util.find_spec("weaver") is not None:
-            return [sys.executable, "-m", "weaver"]
-    except Exception:
-        pass
+    user_weaver = Path.home() / ".local" / "bin" / "weaver"
+    if user_weaver.is_file() and os.access(str(user_weaver), os.X_OK):
+        return [str(user_weaver)]
 
     raise FileNotFoundError(
-        "Could not find 'weaver' executable or Python module 'weaver'. "
-        "Install it in this environment (e.g. python -m pip install --user weaver-core)."
+        "Could not find 'weaver' executable. Install with 'python -m pip install --user weaver-core' "
+        "and ensure ~/.local/bin is on PATH, or set WEAVER_BIN to the executable path."
     )
 
 
