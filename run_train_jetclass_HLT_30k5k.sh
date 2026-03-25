@@ -2,16 +2,43 @@
 #SBATCH -J jcHLTtb
 #SBATCH -p tier3
 #SBATCH --gres=gpu:1
-#SBATCH --mem=32G
-#SBATCH -t 4:00:00
+#SBATCH --cpus-per-task=6
+#SBATCH --mem=64G
+#SBATCH -t 24:00:00
 #SBATCH -o offline_reconstructor_logs/jetclass_hlt_teacher_baseline_%j.out
 #SBATCH -e offline_reconstructor_logs/jetclass_hlt_teacher_baseline_%j.err
 
 set -euo pipefail
 
-WORKDIR="/home/ryreu/atlas/jetclass_transformer"
-SCRIPT="/home/ryreu/atlas/PracticeTagging/evaluate_jetclass_hlt_teacher_baseline.py"
-DATA_DIR="/home/ryreu/atlas/PracticeTagging/data/jetclass_part0"
+WORKDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Prefer colocated evaluator script, fallback to known mirrors.
+SCRIPT_CANDIDATES=(
+  "${WORKDIR}/evaluate_jetclass_hlt_teacher_baseline.py"
+  "/home/ryreu/atlas/PracticeTagging/evaluate_jetclass_hlt_teacher_baseline.py"
+  "/home/ryreu/atlas/PracticeTagging/ATLAS-top-tagging-open-data/evaluate_jetclass_hlt_teacher_baseline.py"
+  "/home/ryan/ComputerScience/ATLAS/HLT_Reco/ATLAS-top-tagging-open-data/evaluate_jetclass_hlt_teacher_baseline.py"
+)
+SCRIPT=""
+for c in "${SCRIPT_CANDIDATES[@]}"; do
+  if [[ -f "${c}" ]]; then
+    SCRIPT="${c}"
+    break
+  fi
+done
+
+DATA_CANDIDATES=(
+  "/home/ryreu/atlas/PracticeTagging/data/jetclass_part0"
+  "/home/ryan/ComputerScience/ATLAS/HLT_Reco/ATLAS-top-tagging-open-data/data/jetclass_part0"
+)
+DATA_DIR=""
+for d in "${DATA_CANDIDATES[@]}"; do
+  if [[ -d "${d}" ]]; then
+    DATA_DIR="${d}"
+    break
+  fi
+done
+
 SAVE_DIR="${WORKDIR}/checkpoints/jetclass_hlt_teacher_baseline"
 
 cd "${WORKDIR}"
@@ -20,6 +47,17 @@ source /home/ryreu/miniconda3/etc/profile.d/conda.sh
 conda activate atlas_kd
 
 mkdir -p offline_reconstructor_logs "${SAVE_DIR}"
+
+if [[ -z "${SCRIPT}" ]]; then
+  echo "ERROR: evaluate_jetclass_hlt_teacher_baseline.py not found." >&2
+  echo "Checked: ${SCRIPT_CANDIDATES[*]}" >&2
+  exit 2
+fi
+if [[ -z "${DATA_DIR}" ]]; then
+  echo "ERROR: jetclass_part0 data directory not found." >&2
+  echo "Checked: ${DATA_CANDIDATES[*]}" >&2
+  exit 2
+fi
 
 export PYTHONWARNINGS="ignore"
 export TQDM_DISABLE=1
