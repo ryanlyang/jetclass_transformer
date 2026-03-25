@@ -3,8 +3,8 @@
 #SBATCH -p tier3
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=6
-#SBATCH --mem=64G
-#SBATCH -t 24:00:00
+#SBATCH --mem=32G
+#SBATCH -t 2:00:00
 #SBATCH -o offline_reconstructor_logs/jetclass_hlt_teacher_baseline_%j.out
 #SBATCH -e offline_reconstructor_logs/jetclass_hlt_teacher_baseline_%j.err
 
