@@ -4,7 +4,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=6
 #SBATCH --mem=64G
-#SBATCH -t 24:00:00
+#SBATCH -t 4:00:00
 #SBATCH -o offline_reconstructor_logs/jetclass_hlt_teacher_baseline_150k75k150k_%j.out
 #SBATCH -e offline_reconstructor_logs/jetclass_hlt_teacher_baseline_150k75k150k_%j.err
 
