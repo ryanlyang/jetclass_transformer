@@ -10,14 +10,18 @@
 
 set -euo pipefail
 
-WORKDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Critical: under Slurm, BASH_SOURCE points into /var/spool; use submit dir instead.
+WORKDIR="${SLURM_SUBMIT_DIR:-$(pwd)}"
+LOG_DIR="${WORKDIR}/offline_reconstructor_logs"
+SAVE_DIR="${WORKDIR}/checkpoints/jetclass_hlt_teacher_baseline"
 
-# Prefer colocated evaluator script, fallback to known mirrors.
+# Prefer evaluator from known repos (updated versions).
 SCRIPT_CANDIDATES=(
   "${WORKDIR}/evaluate_jetclass_hlt_teacher_baseline.py"
-  "/home/ryreu/atlas/PracticeTagging/evaluate_jetclass_hlt_teacher_baseline.py"
   "/home/ryreu/atlas/PracticeTagging/ATLAS-top-tagging-open-data/evaluate_jetclass_hlt_teacher_baseline.py"
+  "/home/ryreu/atlas/PracticeTagging/evaluate_jetclass_hlt_teacher_baseline.py"
   "/home/ryan/ComputerScience/ATLAS/HLT_Reco/ATLAS-top-tagging-open-data/evaluate_jetclass_hlt_teacher_baseline.py"
+  "/home/ryan/ComputerScience/ATLAS/ATLAS-top-tagging-open-data/evaluate_jetclass_hlt_teacher_baseline.py"
 )
 SCRIPT=""
 for c in "${SCRIPT_CANDIDATES[@]}"; do
@@ -39,14 +43,12 @@ for d in "${DATA_CANDIDATES[@]}"; do
   fi
 done
 
-SAVE_DIR="${WORKDIR}/checkpoints/jetclass_hlt_teacher_baseline"
-
 cd "${WORKDIR}"
 
 source /home/ryreu/miniconda3/etc/profile.d/conda.sh
 conda activate atlas_kd
 
-mkdir -p offline_reconstructor_logs "${SAVE_DIR}"
+mkdir -p "${LOG_DIR}" "${SAVE_DIR}"
 
 if [[ -z "${SCRIPT}" ]]; then
   echo "ERROR: evaluate_jetclass_hlt_teacher_baseline.py not found." >&2
@@ -62,7 +64,7 @@ fi
 export PYTHONWARNINGS="ignore"
 export TQDM_DISABLE=1
 
-RAW_LOG="offline_reconstructor_logs/jetclass_hlt_teacher_baseline_raw_${SLURM_JOB_ID}.log"
+RAW_LOG="${LOG_DIR}/jetclass_hlt_teacher_baseline_raw_${SLURM_JOB_ID}.log"
 
 CMD=(
   python -u "${SCRIPT}"
@@ -81,6 +83,9 @@ CMD=(
   --device cuda
 )
 
+echo "WORKDIR=${WORKDIR}"
+echo "SCRIPT=${SCRIPT}"
+echo "DATA_DIR=${DATA_DIR}"
 echo "Running: ${CMD[*]}"
 "${CMD[@]}" 2>&1 | tee "${RAW_LOG}" | awk '
 /Teacher ep [0-9]+:/ {
