@@ -43,6 +43,8 @@ def _load_base_module():
 
 
 def _patch_for_prof_merge(base):
+    original_get_type_config = base.get_type_config
+
     def _allowed_merge_and_output_type_type_agnostic(ti: int, tj: int):
         # Allow any pair except both unknown. Output type follows dominant-energy
         # constituent by returning override=None.
@@ -51,7 +53,7 @@ def _patch_for_prof_merge(base):
         return True, None
 
     def _get_type_config_type_agnostic():
-        cfg = base.get_type_config()
+        cfg = original_get_type_config()
         # Flatten pairwise merge settings to be type-agnostic.
         r = np.full_like(cfg["merge_radius"], 0.018, dtype=np.float64)
         p = np.full_like(cfg["merge_prob"], 0.28, dtype=np.float64)
